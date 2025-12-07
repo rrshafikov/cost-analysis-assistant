@@ -8,7 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     path("login/", auth_views.LoginView.as_view(template_name="accounts/login.html"), name="login"),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("logout/", SimpleLogoutView.as_view(), name="custom_logout"),
 
     # password reset и related URL-ы (password_reset, password_reset_done и т.д.)
     path("accounts/", include("django.contrib.auth.urls")),
