@@ -16,7 +16,12 @@ body {
     background-color: #f7f6f3;
     color: #111827;
 
-    /* space for fixed header */
+    /* flex-раскладка: header (fixed, вне потока) + main (flex:1) + footer */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+
+    /* место под fixed header */
     padding-top: 56px;
 }
 
@@ -34,7 +39,7 @@ body {
     justify-content: space-between;
     padding: 10px 24px;
 
-    background-color: transparent; /* no underline, no background */
+    background-color: transparent;
 }
 
 .app-header-left {
@@ -48,7 +53,6 @@ body {
     font-size: 16px;
     letter-spacing: 0.08em;
     color: #111827;
-    /* no border, just "RR" text */
 }
 
 .app-nav {
@@ -91,7 +95,7 @@ body {
     color: #4b5563;
 }
 
-/* Footer (always at the bottom visually if content is short) */
+/* Footer */
 
 .app-footer {
     padding: 24px 16px 32px;
@@ -130,11 +134,12 @@ body {
 
 .app-main {
     max-width: 960px;
+    width: 100%;
     margin: 24px auto 40px;
     padding: 0 16px;
 
-    /* 56px header + ~96px footer */
-    min-height: calc(100vh - 56px - 96px);
+    /* ключ: main занимает всё доступное пространство между header и footer */
+    flex: 1;
 }
 
 /* Dashboard card */
