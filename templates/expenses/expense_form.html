@@ -83,7 +83,7 @@
         <div style="flex:1 1 280px; min-width:280px;">
             <h2 class="dashboard-section-title" style="margin-bottom:10px;">Import from file</h2>
             <p class="dashboard-total-label" style="margin-bottom:12px;">
-                Upload a CSV from T-Bank or a PDF statement from Sber.
+                Upload a CSV from T-Bank or a XLSX statement from Sber.
             </p>
 
             <form method="post"
@@ -95,7 +95,7 @@
                 <div class="auth-field">
                     <select name="source" id="id_source_import" class="auth-input">
                         <option value="tbank_csv">T-Bank CSV</option>
-                        <option value="sber_pdf">Sberbank PDF</option>
+                        <option value="sber_xlsx">Sberbank XLSX</option>
                     </select>
                 </div>
 
@@ -113,7 +113,7 @@
                            name="file"
                            type="file"
                            class="file-dropzone-input"
-                           accept=".csv,.pdf">
+                           accept=".csv,.xlsx">
                 </label>
 
                 <button type="submit"

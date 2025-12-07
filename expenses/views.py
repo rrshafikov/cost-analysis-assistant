@@ -1,5 +1,7 @@
 from datetime import date, timedelta
 
+import json
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum, Count
 from django.shortcuts import redirect
@@ -21,7 +23,7 @@ from django.utils import timezone
 from django.contrib import messages
 
 from .forms import ExpenseForm, StatementImportForm
-from .services.importers import import_tbank_csv, import_sber_pdf
+from .services.importers import import_tbank_csv, import_sber_xlsx
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -29,9 +31,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        user = self.request.user
 
-        # --- 1) Общий обзор (последние 30 дней, без фильтров) ---
-        base_qs = Expense.objects.filter(user=self.request.user)
+        base_qs = Expense.objects.filter(user=user)
+
+        # --- 1. Overview (последние 30 дней без фильтров) ---
         today = timezone.now().date()
         overview_qs = base_qs.filter(date__gte=today - timezone.timedelta(days=30))
 
@@ -55,35 +59,73 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ctx["overview_avg_per_day"] = overview_avg_per_day
         ctx["has_overview"] = overview_qs.exists()
 
-        # --- 2) Детальная часть с фильтрами ---
+        # --- 2. Filtered queryset ---
         filtered_qs = filtered_expenses_queryset(self.request)
 
         filtered_agg = filtered_qs.aggregate(
             total=Sum("amount"),
             count=Count("id"),
         )
-        ctx["total"] = filtered_agg["total"] or 0
-        ctx["count"] = filtered_agg["count"] or 0
+        total = filtered_agg["total"] or 0
+        count = filtered_agg["count"] or 0
+
+        ctx["total"] = total
+        ctx["count"] = count
         ctx["has_expenses"] = filtered_qs.exists()
 
         first_f = filtered_qs.order_by("date").first()
         last_f = filtered_qs.order_by("-date").first()
         if first_f and last_f:
             days_span_f = (last_f.date - first_f.date).days + 1
-            ctx["avg_per_day"] = (
-                ctx["total"] / days_span_f if days_span_f > 0 else ctx["total"]
-            )
+            ctx["avg_per_day"] = total / days_span_f if days_span_f > 0 else total
         else:
             ctx["avg_per_day"] = 0
 
-        # --- 3) Данные для фильтров ---
+        # --- 2b. Данные для диаграммы по категориям ---
+        category_summary = (
+            filtered_qs
+                .values("category__name")
+                .annotate(total=Sum("amount"))
+                .order_by("-total")
+        )
+
+        category_labels = []
+        category_values = []
+
+        for row in category_summary:
+            name = row["category__name"] or "Uncategorized"
+            category_labels.append(name)
+            category_values.append(float(row["total"] or 0))
+
+        ctx["chart_labels_json"] = json.dumps(category_labels)
+        ctx["chart_values_json"] = json.dumps(category_values)
+
+        # --- 2c. Данные для диаграммы по дням ---
+        daily_summary = (
+            filtered_qs
+                .values("date")
+                .annotate(total=Sum("amount"))
+                .order_by("date")
+        )
+
+        day_labels = []
+        day_values = []
+
+        for row in daily_summary:
+            if row["date"]:
+                day_labels.append(row["date"].isoformat())
+                day_values.append(float(row["total"] or 0))
+
+        ctx["chart_day_labels_json"] = json.dumps(day_labels)
+        ctx["chart_day_values_json"] = json.dumps(day_values)
+
+        # --- 3. Данные для фильтров ---
         banks_qs = base_qs.exclude(bank="").values_list("bank", flat=True)
         curr_qs = base_qs.values_list("currency", flat=True)
 
-        ctx["available_banks"] = sorted({b.strip() for b in banks_qs if b})
-        ctx["available_currencies"] = sorted({c.strip() for c in curr_qs if c})
-
-        ctx["categories"] = ExpenseCategory.objects.filter(user=self.request.user)
+        ctx["available_banks"] = sorted({(b or "").strip() for b in banks_qs if b})
+        ctx["available_currencies"] = sorted({(c or "").strip() for c in curr_qs if c})
+        ctx["categories"] = ExpenseCategory.objects.filter(user=user)
 
         return ctx
 
@@ -198,14 +240,16 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
         return ctx
 
 
-
 class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
     model = Expense
-    template_name = "expenses/expense_confirm_delete.html"
     success_url = reverse_lazy("expense_list")
 
     def get_queryset(self):
         return Expense.objects.filter(user=self.request.user)
+
+    # если кто-то зайдёт GET-ом на /delete/ — просто вернёмся в список
+    def get(self, request, *args, **kwargs):
+        return redirect("expense_list")
 
 
 class AIAnalysisView(LoginRequiredMixin, View):
@@ -281,8 +325,8 @@ class StatementImportView(LoginRequiredMixin, FormView):
 
         if source == "tbank_csv":
             created, total = import_tbank_csv(uploaded, self.request.user)
-        else:
-            created, total = import_sber_pdf(uploaded, self.request.user)
+        else:  # sber_xlsx
+            created, total = import_sber_xlsx(uploaded, self.request.user)
 
         messages.success(
             self.request,

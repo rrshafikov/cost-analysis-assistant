@@ -122,7 +122,14 @@
 
                             <td style="padding: 8px 6px; white-space: nowrap; text-align: right;">
                                 <a href="{% url "expense_update" exp.pk %}" class="secondary-link">Edit</a>
-                                <a href="{% url "expense_delete" exp.pk %}" class="secondary-link">Delete</a>
+                                <form method="post"
+                                      action="{% url 'expense_delete' exp.pk %}"
+                                      style="display:inline;">
+                                      {% csrf_token %}
+                                      <button type="submit" class="secondary-link secondary-link-button">
+                                              Delete
+                                      </button>
+                                </form>
                             </td>
                         </tr>
                     {% endfor %}

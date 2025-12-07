@@ -66,7 +66,7 @@ class ExpenseCategoryForm(forms.ModelForm):
 class StatementImportForm(forms.Form):
     SOURCE_CHOICES = [
         ("tbank_csv", "T-Bank CSV"),
-        ("sber_pdf", "Sberbank PDF"),
+        ("sber_xlsx", "Sberbank XLSX"),
     ]
 
     source = forms.ChoiceField(
@@ -75,5 +75,5 @@ class StatementImportForm(forms.Form):
     )
     file = forms.FileField(
         label="Statement file",
-        help_text="Upload a CSV from T-Bank or a PDF statement from Sber.",
+        help_text="Upload a CSV from T-Bank or a XLSX statement from Sber.",
     )

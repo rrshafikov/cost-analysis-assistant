@@ -7,15 +7,31 @@
         <div>
             <h1 class="dashboard-title">Import statement</h1>
             <p class="dashboard-subtitle">
-                Upload a CSV from T-Bank or a PDF statement from Sberbank.
+                Upload a CSV from T-Bank or an XLSX statement from Sberbank.
             </p>
         </div>
     </header>
 
     <form method="post" enctype="multipart/form-data" class="auth-form">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        <div class="auth-field">
+            {{ form.source.label_tag }}
+            {{ form.source }}
+        </div>
+
+        <div class="auth-field">
+            {{ form.file.label_tag }}
+            {{ form.file }}
+            {% if form.file.help_text %}
+                <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0;">
+                    {{ form.file.help_text }}
+                </p>
+            {% endif %}
+        </div>
+
         <button type="submit" class="primary-button">Import</button>
+        <a href="{% url "expense_list" %}" class="secondary-link">Back to expenses</a>
     </form>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="dashboard">
 
-    <!-- Overview block (last 30 days, all banks/currencies) -->
+    <!-- Header + overview -->
     <header class="dashboard-header">
         <div>
             <h1 class="dashboard-title">Dashboard</h1>
@@ -25,10 +25,11 @@
                 Last 30 days · all banks and currencies
             </p>
             <p class="dashboard-total-value">
-                {{ overview_total }}
+                {{ overview_total|floatformat:2 }} RUB
             </p>
             <p class="dashboard-total-label">
-                {{ overview_count }} expenses · avg per day: {{ overview_avg_per_day|floatformat:2 }}
+                {{ overview_count }} expenses · avg per day:
+                {{ overview_avg_per_day|floatformat:2 }} RUB
             </p>
         </section>
     {% else %}
@@ -46,6 +47,7 @@
         </section>
     {% endif %}
 
+    <!-- Divider -->
     <div style="height: 1px; background: rgba(148,163,184,0.25); margin: 12px 0 18px;"></div>
 
     <!-- Detailed view with filters -->
@@ -54,6 +56,7 @@
             Detailed view with filters
         </h2>
 
+        <!-- Filters toggle -->
         <details class="filters-toggle" {% if request.GET %}open{% endif %}>
             <summary>
                 <span class="filters-toggle-label">Filters</span>
@@ -61,6 +64,8 @@
             </summary>
 
             <div class="filters-panel">
+
+                <!-- BANK -->
                 <select name="bank"
                         form="filters-form"
                         class="filter-pill">
@@ -72,6 +77,7 @@
                     {% endfor %}
                 </select>
 
+                <!-- CURRENCY -->
                 <select name="currency"
                         form="filters-form"
                         class="filter-pill">
@@ -83,6 +89,7 @@
                     {% endfor %}
                 </select>
 
+                <!-- CATEGORY -->
                 <select name="category"
                         form="filters-form"
                         class="filter-pill">
@@ -94,12 +101,14 @@
                     {% endfor %}
                 </select>
 
+                <!-- DATE FROM -->
                 <input type="date"
                        name="date_from"
                        value="{{ request.GET.date_from }}"
                        form="filters-form"
                        class="filter-pill filter-date">
 
+                <!-- DATE TO -->
                 <input type="date"
                        name="date_to"
                        value="{{ request.GET.date_to }}"
@@ -120,23 +129,68 @@
         </details>
 
         {% if has_expenses %}
+
+            <!-- Filtered totals -->
             <section class="dashboard-summary">
                 <p class="dashboard-total-label">Filtered total</p>
                 <p class="dashboard-total-value">
-                    {{ total }} {{ request.GET.currency|default:"" }}
+                    {{ total|floatformat:2 }} {{ request.GET.currency|default:"RUB" }}
                 </p>
                 <p class="dashboard-total-label">
-                    {{ count }} expenses · avg per day: {{ avg_per_day|floatformat:2 }}
+                    {{ count }} expenses · avg per day:
+                    {{ avg_per_day|floatformat:2 }} {{ request.GET.currency|default:"RUB" }}
                 </p>
             </section>
+
+            <!-- CHART -->
+            {% if chart_values_json or chart_day_values_json %}
+                <section class="dashboard-chart">
+                    <div class="dashboard-chart-header">
+                        <h3 class="dashboard-section-title">Spending</h3>
+
+                        <!-- Toggle -->
+                        <div class="chart-toggle">
+                            <button type="button"
+                                    id="chart-toggle-category"
+                                    class="chart-toggle-button chart-toggle-button-active"
+                                    data-mode="category">
+                                By categories
+                            </button>
+                            <button type="button"
+                                    id="chart-toggle-day"
+                                    class="chart-toggle-button"
+                                    data-mode="day">
+                                By day
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-chart-wrapper">
+                        <canvas id="expensesChart"
+                                data-category-labels="{{ chart_labels_json|escape }}"
+                                data-category-values="{{ chart_values_json|escape }}"
+                                data-day-labels="{{ chart_day_labels_json|escape }}"
+                                data-day-values="{{ chart_day_values_json|escape }}">
+                        </canvas>
+                    </div>
+                </section>
+            {% endif %}
+
         {% else %}
             <section class="dashboard-empty">
                 <h3 class="dashboard-empty-title">No expenses for current filters.</h3>
                 <p class="dashboard-empty-text">
-                    Try changing the filter values or reset them to see all data.
+                    Try adjusting or resetting filter values.
                 </p>
             </section>
         {% endif %}
     </section>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% load static %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static "js/dashboard_chart.js" %}"></script>
 {% endblock %}
