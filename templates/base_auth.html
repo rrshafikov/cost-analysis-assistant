@@ -1,0 +1,26 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Авторизация{% endblock %}</title>
+
+    <!-- JetBrains Mono для всего проекта -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Базовые стили для всех auth-страниц -->
+    <link rel="stylesheet" href="{% static 'css/auth_base.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<header class="auth-header">
+    <div class="auth-logo">RR</div>
+</header>
+
+<main class="auth-main">
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
