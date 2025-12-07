@@ -15,20 +15,26 @@ body {
     font-family: "JetBrains Mono", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background-color: #f7f6f3;
     color: #111827;
+
+    /* space for fixed header */
+    padding-top: 56px;
 }
 
-/* Header (used on all pages, including auth) */
+/* Header (fixed, transparent, same on all pages) */
 
 .app-header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+
     z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 24px;
-    background-color: #f7f6f3;
-    /* no bottom border (no underline) */
+
+    background-color: transparent; /* no underline, no background */
 }
 
 .app-header-left {
@@ -42,7 +48,7 @@ body {
     font-size: 16px;
     letter-spacing: 0.08em;
     color: #111827;
-    /* no border, just RR text */
+    /* no border, just "RR" text */
 }
 
 .app-nav {
@@ -85,10 +91,9 @@ body {
     color: #4b5563;
 }
 
-/* Footer (used everywhere) */
+/* Footer (always at the bottom visually if content is short) */
 
 .app-footer {
-    margin-top: 40px;
     padding: 24px 16px 32px;
     text-align: center;
     font-size: 11px;
@@ -127,6 +132,9 @@ body {
     max-width: 960px;
     margin: 24px auto 40px;
     padding: 0 16px;
+
+    /* 56px header + ~96px footer */
+    min-height: calc(100vh - 56px - 96px);
 }
 
 /* Dashboard card */

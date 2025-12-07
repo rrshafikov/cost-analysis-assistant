@@ -22,7 +22,7 @@
         <div class="app-logo">RR</div>
     </div>
     <div class="app-header-right">
-        <!-- no links here for auth pages -->
+        <!-- no links on auth pages -->
     </div>
 </header>
 
@@ -33,9 +33,9 @@
 <footer class="app-footer">
     <div class="app-footer-line">© Cost Analysis Assistant 2025</div>
     <div class="app-footer-links">
-        <a href="{% url "dashboard" %}" class="app-footer-link">Dashboard</a>
-        <a href="{% url "expense_list" %}" class="app-footer-link">Expenses</a>
-        <a href="{% url "ai_analysis" %}" class="app-footer-link">AI analysis</a>
+        <a href="{% url 'dashboard' %}" class="app-footer-link">Dashboard</a>
+        <a href="{% url 'expense_list' %}" class="app-footer-link">Expenses</a>
+        <a href="{% url 'ai_analysis' %}" class="app-footer-link">AI analysis</a>
     </div>
     <div class="app-footer-line app-footer-dev">
         developed by Ruslan Shafikov

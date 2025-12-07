@@ -2,7 +2,7 @@
 
 /* Center auth content */
 .auth-main {
-    min-height: calc(100vh - 56px - 96px); /* header + footer rough heights */
+    min-height: calc(100vh - 56px - 96px); /* header + footer heights */
     display: flex;
     align-items: center;
     justify-content: center;
