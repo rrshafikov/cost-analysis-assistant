@@ -11,7 +11,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("", DashboardView.as_view(), name="dashboard"),
+    path("dashboard/", DashboardView.as_view(), name="dashboard"),
 
     path("expenses/", ExpenseListView.as_view(), name="expense_list"),
     path("expenses/add/", ExpenseCreateView.as_view(), name="expense_create"),
