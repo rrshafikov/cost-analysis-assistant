@@ -1,5 +1,171 @@
 {% extends "base.html" %}
-{% block title %}Expenses{% endblock %}
+{% block title %}Add expense{% endblock %}
+
 {% block content %}
-    <!-- page content -->
+<div class="dashboard">
+    <header class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">
+                {% if object %}Edit expense{% else %}Add expense{% endif %}
+            </h1>
+            <p class="dashboard-subtitle">
+                Create a manual expense or import it from a file.
+            </p>
+        </div>
+    </header>
+
+    <div style="display:flex; flex-wrap:wrap; gap:24px;">
+
+        <!-- Manual form -->
+        <div style="flex:1 1 280px; min-width:280px;">
+            <h2 class="dashboard-section-title" style="margin-bottom:10px;">Manual entry</h2>
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.date.id_for_label }}">Date</label>
+                    {{ form.date }}
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    <datalist id="description-options">
+                        {% for desc in description_options %}
+                            <option value="{{ desc }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.category_name.id_for_label }}">Category</label>
+                    {{ form.category_name }}
+                    <datalist id="category-options">
+                        {% for cat in category_options %}
+                            <option value="{{ cat }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.amount.id_for_label }}">Amount</label>
+                    {{ form.amount }}
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.bank.id_for_label }}">Bank</label>
+                    {{ form.bank }}
+                    <datalist id="bank-options">
+                        {% for bank in bank_options %}
+                            <option value="{{ bank }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label" for="{{ form.currency.id_for_label }}">Currency</label>
+                    {{ form.currency }}
+                    <datalist id="currency-options">
+                        {% for cur in currency_options %}
+                            <option value="{{ cur }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <button type="submit" class="primary-button">
+                    {% if object %}Save changes{% else %}Save{% endif %}
+                </button>
+                <a href="{% url "expense_list" %}" class="secondary-link">Cancel</a>
+            </form>
+        </div>
+
+        <!-- File import card -->
+        <div style="flex:1 1 280px; min-width:280px;">
+            <h2 class="dashboard-section-title" style="margin-bottom:10px;">Import from file</h2>
+            <p class="dashboard-total-label" style="margin-bottom:12px;">
+                Upload a CSV from T-Bank or a PDF statement from Sber.
+            </p>
+
+            <form method="post"
+                  action="{% url "statement_import" %}"
+                  enctype="multipart/form-data"
+                  class="auth-form">
+                {% csrf_token %}
+
+                <div class="auth-field">
+                    <select name="source" id="id_source_import" class="auth-input">
+                        <option value="tbank_csv">T-Bank CSV</option>
+                        <option value="sber_pdf">Sberbank PDF</option>
+                    </select>
+                </div>
+
+                <label for="id_file_import" class="file-dropzone">
+                    <div class="file-dropzone-inner">
+                        <span class="file-dropzone-title">Drop file here</span>
+                        <span class="file-dropzone-subtitle">
+                            or click to choose a file from your device
+                        </span>
+                        <span class="file-dropzone-filename" id="file-dropzone-filename">
+                            No file selected
+                        </span>
+                    </div>
+                    <input id="id_file_import"
+                           name="file"
+                           type="file"
+                           class="file-dropzone-input"
+                           accept=".csv,.pdf">
+                </label>
+
+                <button type="submit"
+                        class="primary-button primary-button-small"
+                        style="margin-top:12px;">
+                    Import statement
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const dropzone = document.querySelector(".file-dropzone");
+        const input = document.getElementById("id_file_import");
+        const filenameLabel = document.getElementById("file-dropzone-filename");
+
+        if (!dropzone || !input || !filenameLabel) {
+            return;
+        }
+
+        function setFilenameFromFiles(files) {
+            if (files && files.length > 0) {
+                filenameLabel.textContent = files[0].name;
+            } else {
+                filenameLabel.textContent = "No file selected";
+            }
+        }
+
+        dropzone.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            dropzone.classList.add("file-dropzone--active");
+        });
+
+        dropzone.addEventListener("dragleave", function(e) {
+            e.preventDefault();
+            dropzone.classList.remove("file-dropzone--active");
+        });
+
+        dropzone.addEventListener("drop", function(e) {
+            e.preventDefault();
+            dropzone.classList.remove("file-dropzone--active");
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                input.files = e.dataTransfer.files;
+                setFilenameFromFiles(input.files);
+            }
+        });
+
+        input.addEventListener("change", function() {
+            setFilenameFromFiles(input.files);
+        });
+    })();
+</script>
 {% endblock %}

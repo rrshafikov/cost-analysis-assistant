@@ -23,7 +23,6 @@ body {
     /* space for fixed header */
     padding-top: 64px;
 
-    /* базовый размер шрифта побольше, чтобы всё не казалось мелким */
     font-size: 15px;
 }
 
@@ -144,7 +143,7 @@ body {
     flex: 1;
 }
 
-/* Dashboard card */
+/* Dashboard card / generic card */
 
 .dashboard {
     background-color: #ffffff;
@@ -211,11 +210,7 @@ body {
     font-weight: 600;
 }
 
-/* Category list */
-
-.dashboard-categories {
-    margin-top: 12px;
-}
+/* Category list reused in categories or small lists */
 
 .dashboard-section-title {
     margin: 0 0 8px;
@@ -241,11 +236,7 @@ body {
     color: #374151;
 }
 
-.dashboard-category-amount {
-    color: #111827;
-}
-
-/* Buttons & links */
+/* Generic buttons & links */
 
 .primary-button {
     display: inline-flex;
@@ -284,7 +275,161 @@ body {
     color: #111827;
 }
 
-/* ---------------- Mobile layout ---------------- */
+/* Generic form styles used in app pages as well */
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.auth-label {
+    color: #4b5563;
+}
+
+.auth-input {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    background-color: #f9fafb;
+}
+
+.auth-input:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+/* Filters dropdown (container) */
+
+.filters-toggle {
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.filters-toggle summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #4b5563;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.filters-toggle[open] summary {
+    background-color: rgba(148, 163, 184, 0.16);
+    color: #111827;
+}
+
+.filters-toggle summary::-webkit-details-marker {
+    display: none;
+}
+
+.filters-toggle-label {
+    font-weight: 500;
+}
+
+.filters-toggle-arrow {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* Filters as pills: "All banks", "RUB", etc */
+
+.filters-panel {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-pill {
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    background-color: #f9fafb;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+}
+
+.filter-pill:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.12);
+    background-color: #ffffff;
+}
+
+.filter-pill:hover {
+    background-color: #f3f4f6;
+}
+
+.filter-date {
+    min-width: 120px;
+}
+
+/* File dropzone on Add expense */
+
+.file-dropzone {
+    border: 1.5px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 18px 16px;
+    display: block;
+    cursor: pointer;
+    background-color: rgba(249, 250, 251, 0.9);
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    margin-top: 4px;
+}
+
+.file-dropzone-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+}
+
+.file-dropzone-title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.file-dropzone-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.file-dropzone-filename {
+    font-size: 12px;
+    color: #4b5563;
+    margin-top: 4px;
+}
+
+.file-dropzone-input {
+    display: none;
+}
+
+.file-dropzone--active {
+    background-color: #eff6ff;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+/* Responsive */
 
 @media (max-width: 768px) {
     body {
@@ -346,10 +491,6 @@ body {
         font-size: 24px;
     }
 
-    .dashboard-category-item {
-        font-size: 15px;
-    }
-
     .primary-button {
         width: 100%;
         justify-content: center;
@@ -357,7 +498,7 @@ body {
 
     .secondary-link {
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
     }
 
     .app-footer {
@@ -371,5 +512,14 @@ body {
 
     .app-footer-dev {
         font-size: 12px;
+    }
+
+    .filters-panel {
+        gap: 6px;
+    }
+
+    .filter-pill {
+        font-size: 13px;
+        padding-inline: 10px;
     }
 }

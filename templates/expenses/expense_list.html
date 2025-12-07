@@ -3,23 +3,31 @@
 
 {% block content %}
 <div class="dashboard">
+
+    <!-- Header -->
     <header class="dashboard-header">
         <div>
             <h1 class="dashboard-title">Expenses</h1>
-            <p class="dashboard-subtitle">All operations that match the filters.</p>
+            <p class="dashboard-subtitle">All operations that match your filters.</p>
         </div>
-        <div>
-            <a href="{% url 'expense_create' %}" class="primary-button primary-button-small">
+        <div style="display: flex; gap: 12px;">
+            <a href="{% url "expense_create" %}" class="primary-button primary-button-small">
                 Add expense
             </a>
         </div>
     </header>
 
-    <!-- Filters (та же форма, что и на Dashboard) -->
-    <form method="get" class="auth-form" style="margin-bottom: 18px;">
-        <div class="auth-field">
-            <label class="auth-label" for="id_bank">Bank</label>
-            <select name="bank" id="id_bank" class="auth-input">
+    <!-- FILTERS DROPDOWN -->
+    <details class="filters-toggle" {% if request.GET %}open{% endif %}>
+        <summary>
+            <span class="filters-toggle-label">Filters</span>
+            <span class="filters-toggle-arrow">▾</span>
+        </summary>
+
+        <div class="filters-panel">
+            <select name="bank"
+                    form="filters-form"
+                    class="filter-pill">
                 <option value="">All banks</option>
                 {% for bank in available_banks %}
                     <option value="{{ bank }}" {% if request.GET.bank == bank %}selected{% endif %}>
@@ -27,11 +35,10 @@
                     </option>
                 {% endfor %}
             </select>
-        </div>
 
-        <div class="auth-field">
-            <label class="auth-label" for="id_currency">Currency</label>
-            <select name="currency" id="id_currency" class="auth-input">
+            <select name="currency"
+                    form="filters-form"
+                    class="filter-pill">
                 <option value="">All currencies</option>
                 {% for cur in available_currencies %}
                     <option value="{{ cur }}" {% if request.GET.currency == cur %}selected{% endif %}>
@@ -39,69 +46,83 @@
                     </option>
                 {% endfor %}
             </select>
-        </div>
 
-        <div class="auth-field">
-            <label class="auth-label" for="id_category">Category</label>
-            <select name="category" id="id_category" class="auth-input">
+            <select name="category"
+                    form="filters-form"
+                    class="filter-pill">
                 <option value="">All categories</option>
                 {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:'s' %}selected{% endif %}>
+                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
                         {{ cat.name }}
                     </option>
                 {% endfor %}
             </select>
+
+            <input type="date"
+                   name="date_from"
+                   value="{{ request.GET.date_from }}"
+                   form="filters-form"
+                   class="filter-pill filter-date">
+
+            <input type="date"
+                   name="date_to"
+                   value="{{ request.GET.date_to }}"
+                   form="filters-form"
+                   class="filter-pill filter-date">
         </div>
 
-        <div class="auth-field">
-            <label class="auth-label">Date range</label>
-            <div style="display:flex; gap:8px;">
-                <input type="date"
-                       name="date_from"
-                       value="{{ request.GET.date_from }}"
-                       class="auth-input"
-                       style="flex:1;">
-                <input type="date"
-                       name="date_to"
-                       value="{{ request.GET.date_to }}"
-                       class="auth-input"
-                       style="flex:1;">
-            </div>
+        <div style="margin-top: 10px;">
+            <form id="filters-form" method="get" class="auth-form">
+                <button type="submit" class="primary-button primary-button-small">
+                    Apply
+                </button>
+                <a href="{% url "expense_list" %}" class="secondary-link">Reset</a>
+                <a href="{% url "statement_import" %}" class="secondary-link">Import</a>
+            </form>
         </div>
+    </details>
 
-        <button type="submit" class="primary-button primary-button-small">
-            Apply filters
-        </button>
-        <a href="{% url 'expense_list' %}" class="secondary-link">Reset</a>
-        <a href="{% url 'statement_import' %}" class="secondary-link">Import statement</a>
-    </form>
-
+    <!-- EXPENSES TABLE -->
     {% if expenses %}
-        <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        <div style="overflow-x: auto; margin-top: 16px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <thead>
-                    <tr style="text-align:left; border-bottom:1px solid rgba(148,163,184,0.3);">
-                        <th style="padding:6px 4px;">Date</th>
-                        <th style="padding:6px 4px;">Description</th>
-                        <th style="padding:6px 4px;">Category</th>
-                        <th style="padding:6px 4px;">Bank</th>
-                        <th style="padding:6px 4px; text-align:right;">Amount</th>
-                        <th style="padding:6px 4px;"></th>
+                    <tr style="text-align: left; border-bottom: 1px solid rgba(148,163,184,0.3);">
+                        <th style="padding: 8px 6px;">Date</th>
+                        <th style="padding: 8px 6px;">Description</th>
+                        <th style="padding: 8px 6px;">Category</th>
+                        <th style="padding: 8px 6px;">Bank</th>
+                        <th style="padding: 8px 6px; text-align: right;">Amount</th>
+                        <th style="padding: 8px 6px;"></th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for exp in expenses %}
-                        <tr style="border-bottom:1px solid rgba(243,244,246,1);">
-                            <td style="padding:6px 4px; white-space:nowrap;">{{ exp.date }}</td>
-                            <td style="padding:6px 4px;">{{ exp.description }}</td>
-                            <td style="padding:6px 4px;">{{ exp.category.name|default:"—" }}</td>
-                            <td style="padding:6px 4px;">{{ exp.bank|default:"—" }}</td>
-                            <td style="padding:6px 4px; text-align:right;">
+                        <tr style="border-bottom: 1px solid rgba(243,244,246,1);">
+                            <td style="padding: 8px 6px; white-space: nowrap;">
+                                {{ exp.date }}
+                            </td>
+
+                            <td style="padding: 8px 6px;">
+                                {{ exp.description }}
+                            </td>
+
+                            <td style="padding: 8px 6px;">
+                                {{ exp.category.name|default:"—" }}
+                            </td>
+
+                            <td style="padding: 8px 6px;">
+                                {{ exp.bank|default:"—" }}
+                            </td>
+
+                            <td style="padding: 8px 6px; text-align: right;">
                                 {{ exp.amount }} {{ exp.currency }}
                             </td>
-                            <td style="padding:6px 4px; text-align:right; white-space:nowrap;">
-                                <a href="{% url 'expense_update' exp.pk %}" class="secondary-link">Edit</a>
-                                <a href="{% url 'expense_delete' exp.pk %}" class="secondary-link">Delete</a>
+
+                            <td style="padding: 8px 6px; white-space: nowrap; text-align: right;">
+                                <a href="{% url "expense_update" exp.pk %}" class="secondary-link">Edit</a>
+                                <a href="{% url "expense_delete" exp.pk %}" class="secondary-link">Delete</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -110,21 +131,27 @@
         </div>
 
         {% if is_paginated %}
-            <div style="margin-top:12px; font-size:13px;">
+            <div style="margin-top: 12px; font-size: 13px;">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}" class="secondary-link">Previous</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="secondary-link">
+                        Previous
+                    </a>
                 {% endif %}
+
                 <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="secondary-link">Next</a>
+                    <a href="?page={{ page_obj.next_page_number }}" class="secondary-link">
+                        Next
+                    </a>
                 {% endif %}
             </div>
         {% endif %}
     {% else %}
-        <section class="dashboard-empty">
+        <section class="dashboard-empty" style="margin-top: 16px;">
             <h2 class="dashboard-empty-title">No expenses found.</h2>
             <p class="dashboard-empty-text">
-                Try changing filters or import a new statement.
+                Try adjusting the filters or import a bank statement.
             </p>
         </section>
     {% endif %}

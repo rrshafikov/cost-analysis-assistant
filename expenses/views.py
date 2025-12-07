@@ -1,4 +1,3 @@
-# expenses/views.py
 from datetime import date, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -19,6 +18,7 @@ from .forms import ExpenseForm, ExpenseCategory
 from .models import Expense
 
 from django.utils import timezone
+from django.contrib import messages
 
 from .forms import ExpenseForm, StatementImportForm
 from .services.importers import import_tbank_csv, import_sber_pdf
@@ -29,47 +29,61 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        qs = filtered_expenses_queryset(self.request)
 
-        # по умолчанию — последние 30 дней
-        if not self.request.GET.get("date_from") and not self.request.GET.get("date_to"):
-            today = timezone.now().date()
-            qs = qs.filter(date__gte=today - timezone.timedelta(days=30))
+        # --- 1) Общий обзор (последние 30 дней, без фильтров) ---
+        base_qs = Expense.objects.filter(user=self.request.user)
+        today = timezone.now().date()
+        overview_qs = base_qs.filter(date__gte=today - timezone.timedelta(days=30))
 
-        summary = qs.aggregate(
+        overview_agg = overview_qs.aggregate(
             total=Sum("amount"),
             count=Count("id"),
         )
+        overview_total = overview_agg["total"] or 0
+        overview_count = overview_agg["count"] or 0
 
-        total = summary["total"] or 0
-        count = summary["count"] or 0
-
-        first = qs.order_by("date").first()
-        last = qs.order_by("-date").first()
+        first = overview_qs.order_by("date").first()
+        last = overview_qs.order_by("-date").first()
         if first and last:
             days_span = (last.date - first.date).days + 1
-            avg_per_day = total / days_span if days_span > 0 else total
+            overview_avg_per_day = overview_total / days_span if days_span > 0 else overview_total
         else:
-            avg_per_day = 0
+            overview_avg_per_day = 0
 
-        # для фильтров
-        ctx["available_banks"] = (
-            Expense.objects.filter(user=self.request.user)
-            .exclude(bank="")
-            .values_list("bank", flat=True)
-            .distinct()
+        ctx["overview_total"] = overview_total
+        ctx["overview_count"] = overview_count
+        ctx["overview_avg_per_day"] = overview_avg_per_day
+        ctx["has_overview"] = overview_qs.exists()
+
+        # --- 2) Детальная часть с фильтрами ---
+        filtered_qs = filtered_expenses_queryset(self.request)
+
+        filtered_agg = filtered_qs.aggregate(
+            total=Sum("amount"),
+            count=Count("id"),
         )
-        ctx["available_currencies"] = (
-            Expense.objects.filter(user=self.request.user)
-            .values_list("currency", flat=True)
-            .distinct()
-        )
+        ctx["total"] = filtered_agg["total"] or 0
+        ctx["count"] = filtered_agg["count"] or 0
+        ctx["has_expenses"] = filtered_qs.exists()
+
+        first_f = filtered_qs.order_by("date").first()
+        last_f = filtered_qs.order_by("-date").first()
+        if first_f and last_f:
+            days_span_f = (last_f.date - first_f.date).days + 1
+            ctx["avg_per_day"] = (
+                ctx["total"] / days_span_f if days_span_f > 0 else ctx["total"]
+            )
+        else:
+            ctx["avg_per_day"] = 0
+
+        # --- 3) Данные для фильтров ---
+        banks_qs = base_qs.exclude(bank="").values_list("bank", flat=True)
+        curr_qs = base_qs.values_list("currency", flat=True)
+
+        ctx["available_banks"] = sorted({b.strip() for b in banks_qs if b})
+        ctx["available_currencies"] = sorted({c.strip() for c in curr_qs if c})
+
         ctx["categories"] = ExpenseCategory.objects.filter(user=self.request.user)
-
-        ctx["total"] = total
-        ctx["count"] = count
-        ctx["avg_per_day"] = avg_per_day
-        ctx["has_expenses"] = qs.exists()
 
         return ctx
 
@@ -85,17 +99,15 @@ class ExpenseListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["available_banks"] = (
-            Expense.objects.filter(user=self.request.user)
-            .exclude(bank="")
-            .values_list("bank", flat=True)
-            .distinct()
-        )
-        ctx["available_currencies"] = (
-            Expense.objects.filter(user=self.request.user)
-            .values_list("currency", flat=True)
-            .distinct()
-        )
+
+        base_qs = Expense.objects.filter(user=self.request.user)
+
+        banks_qs = base_qs.exclude(bank="").values_list("bank", flat=True)
+        curr_qs = base_qs.values_list("currency", flat=True)
+
+        ctx["available_banks"] = sorted({b.strip() for b in banks_qs if b})
+        ctx["available_currencies"] = sorted({c.strip() for c in curr_qs if c})
+
         ctx["categories"] = ExpenseCategory.objects.filter(user=self.request.user)
         return ctx
 
@@ -106,16 +118,48 @@ class ExpenseCreateView(LoginRequiredMixin, CreateView):
     template_name = "expenses/expense_form.html"
     success_url = reverse_lazy("expense_list")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        base_qs = Expense.objects.filter(user=self.request.user)
+
+        # категории из таблицы категорий
+        category_names = (
+            ExpenseCategory.objects.filter(user=self.request.user)
+            .values_list("name", flat=True)
+        )
+        ctx["category_options"] = sorted({(c or "").strip() for c in category_names if c})
+
+        # валюты из расходов
+        currency_values = base_qs.values_list("currency", flat=True)
+        ctx["currency_options"] = sorted({(c or "").strip() for c in currency_values if c})
+
+        # банки из расходов
+        bank_values = base_qs.values_list("bank", flat=True)
+        ctx["bank_options"] = sorted({(b or "").strip() for b in bank_values if b})
+
+        # описания (последние, без дублей)
+        description_values = (
+            base_qs.order_by("-date")
+            .values_list("description", flat=True)[:50]
+        )
+        ctx["description_options"] = sorted({(d or "").strip() for d in description_values if d})
+
+        return ctx
+
     def form_valid(self, form):
         expense = form.save(commit=False)
         expense.user = self.request.user
+        if not expense.bank:
+            expense.bank = "Manual"
+        if not expense.currency:
+            expense.currency = "RUB"
         expense.save()
-        return redirect(self.get_success_url())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Добавить расход"
-        return context
+        return super().form_valid(form)
 
 
 class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
@@ -124,13 +168,35 @@ class ExpenseUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "expenses/expense_form.html"
     success_url = reverse_lazy("expense_list")
 
-    def get_queryset(self):
-        return Expense.objects.filter(user=self.request.user)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Редактировать расход"
-        return context
+        ctx = super().get_context_data(**kwargs)
+        base_qs = Expense.objects.filter(user=self.request.user)
+
+        category_names = (
+            ExpenseCategory.objects.filter(user=self.request.user)
+            .values_list("name", flat=True)
+        )
+        ctx["category_options"] = sorted({(c or "").strip() for c in category_names if c})
+
+        currency_values = base_qs.values_list("currency", flat=True)
+        ctx["currency_options"] = sorted({(c or "").strip() for c in currency_values if c})
+
+        bank_values = base_qs.values_list("bank", flat=True)
+        ctx["bank_options"] = sorted({(b or "").strip() for b in bank_values if b})
+
+        description_values = (
+            base_qs.order_by("-date")
+            .values_list("description", flat=True)[:50]
+        )
+        ctx["description_options"] = sorted({(d or "").strip() for d in description_values if d})
+
+        return ctx
+
 
 
 class ExpenseDeleteView(LoginRequiredMixin, DeleteView):
