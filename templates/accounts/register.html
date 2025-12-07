@@ -1,22 +1,60 @@
-{% extends "base.html" %}
+{% extends "base_auth.html" %}
+{% load static %}
+{% load form_tags %}
 {% block title %}Регистрация{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth_register.css' %}">
+{% endblock %}
+
 {% block content %}
-<h1>Регистрация</h1>
+<div class="auth-card">
+    <div class="auth-card-header">
+        <h1 class="auth-title auth-title-register">Create your account.</h1>
+        <p class="auth-subtitle auth-subtitle-register">Sign up to start tracking your expenses with AI.</p>
+    </div>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Создать аккаунт</button>
-</form>
+    {% if form.errors %}
+        <div class="auth-errors">
+            Проверьте правильность введённых данных.
+        </div>
+    {% endif %}
 
-<p>
-    Уже есть аккаунт?
-    <a href="{% url 'login' %}">Войти</a>
-</p>
+    <form method="post" class="auth-form">
+        {% csrf_token %}
 
-<p>
-    Забыли пароль?
-    <a href="{% url 'password_reset' %}">Восстановить доступ</a>
-</p>
+        <div class="auth-field">
+            <label class="auth-label" for="id_username">Логин</label>
+            {{ form.username|add_class:"auth-input" }}
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label" for="id_email">Email (необязательно)</label>
+            {{ form.email|add_class:"auth-input" }}
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label" for="id_password1">Пароль</label>
+            {{ form.password1|add_class:"auth-input" }}
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label" for="id_password2">Повторите пароль</label>
+            {{ form.password2|add_class:"auth-input" }}
+        </div>
+
+        <button type="submit" class="auth-button">Create account</button>
+    </form>
+
+    <div class="auth-links">
+        <p>
+            Уже есть аккаунт?
+            <a href="{% url 'login' %}">Войти</a>
+        </p>
+        <p>
+            Забыли пароль?
+            <a href="{% url 'password_reset' %}">Восстановить доступ</a>
+        </p>
+    </div>
+</div>
 {% endblock %}
