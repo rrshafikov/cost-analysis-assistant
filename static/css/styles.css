@@ -601,3 +601,87 @@ body {
         align-items: flex-start;
     }
 }
+
+.ai-card {
+    background: #ffffff;
+    border: 1px solid rgba(148,163,184,0.35);
+    padding: 14px 16px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-family: "JetBrains Mono", monospace;
+}
+
+.ai-page {
+    min-height: calc(100vh - 140px); /* примерно: экран минус хедер+футер */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-dashboard {
+    max-width: 720px;
+    width: 100%;
+}
+
+.ai-card {
+    background: #ffffff;
+    border: 1px solid rgba(148,163,184,0.35);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+}
+
+/* На мобильных не жёстко центрируем по вертикали, чтобы было комфортно скроллить */
+@media (max-width: 768px) {
+    .ai-page {
+        min-height: auto;
+        align-items: flex-start;
+    }
+
+    .ai-dashboard {
+        margin-top: 12px;
+    }
+}
+
+.ai-page {
+    min-height: calc(100vh - 140px); /* экран минус хедер+футер примерно */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-dashboard {
+    max-width: 720px;
+    width: 100%;
+}
+
+.ai-card {
+    background: #ffffff;
+    border: 1px solid rgba(148,163,184,0.35);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+}
+
+/* жирный совет под инсайтом */
+.ai-advice {
+    display: block;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* На мобильных — не выравниваем по центру по вертикали, чтобы было удобнее скроллить */
+@media (max-width: 768px) {
+    .ai-page {
+        min-height: auto;
+        align-items: flex-start;
+    }
+
+    .ai-dashboard {
+        margin-top: 12px;
+    }
+}

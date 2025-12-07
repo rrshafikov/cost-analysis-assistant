@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}AI Analysis{% endblock %}
+
+{% block content %}
+<div class="ai-page">
+    <div class="dashboard ai-dashboard">
+
+        <header class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">AI Expense Analysis</h1>
+                <p class="dashboard-subtitle">
+                    Задайте вопрос об изменениях в ваших расходах.
+                </p>
+            </div>
+        </header>
+
+        <form method="post" class="auth-form" style="max-width: 600px; margin-top: 8px;">
+            {% csrf_token %}
+            <div class="auth-field">
+                <input type="text"
+                       name="question"
+                       class="auth-input"
+                       placeholder="Почему я трачу больше в этом месяце? Какие категории выросли?"
+                       value="{{ question }}">
+            </div>
+            <button class="primary-button">Analyze</button>
+        </form>
+
+        {% if answers %}
+            <section style="margin-top: 24px;">
+                <h3 class="dashboard-section-title">Инсайты</h3>
+
+                <div id="ai-insights">
+                    {% for a in answers %}
+                        <div class="ai-card"
+                             data-text-main="{{ a.main|escape }}"
+                             data-advice="{{ a.advice|default_if_none:''|escape }}">
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {% load static %}
+    <script src="{% static "js/ai_analysis.js" %}"></script>
+{% endblock %}

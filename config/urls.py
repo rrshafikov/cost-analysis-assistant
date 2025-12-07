@@ -51,4 +51,5 @@ urlpatterns = [
 
     path("", RegisterView.as_view(), name="register"),
     path("", include("expenses.urls")),
+    path("ai/", include("ai.urls")),
 ]
