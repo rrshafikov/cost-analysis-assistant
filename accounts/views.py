@@ -20,3 +20,9 @@ class RegisterView(FormView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
+
+
+class SimpleLogoutView(FormView):
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return redirect("login")
