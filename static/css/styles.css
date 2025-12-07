@@ -17,7 +17,7 @@ body {
     color: #111827;
 }
 
-/* Header */
+/* Header (used on all pages, including auth) */
 
 .app-header {
     position: sticky;
@@ -28,7 +28,7 @@ body {
     justify-content: space-between;
     padding: 10px 24px;
     background-color: #f7f6f3;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    /* no bottom border (no underline) */
 }
 
 .app-header-left {
@@ -42,9 +42,7 @@ body {
     font-size: 16px;
     letter-spacing: 0.08em;
     color: #111827;
-    border-radius: 999px;
-    border: 1px solid #111827;
-    padding: 4px 10px;
+    /* no border, just RR text */
 }
 
 .app-nav {
@@ -87,7 +85,43 @@ body {
     color: #4b5563;
 }
 
-/* Main layout */
+/* Footer (used everywhere) */
+
+.app-footer {
+    margin-top: 40px;
+    padding: 24px 16px 32px;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.app-footer-line {
+    margin: 2px 0;
+}
+
+.app-footer-links {
+    margin: 8px 0;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.app-footer-link {
+    font-size: 11px;
+    text-decoration: none;
+    color: #9ca3af;
+}
+
+.app-footer-link:hover {
+    color: #4b5563;
+}
+
+.app-footer-dev {
+    font-size: 10px;
+    margin-top: 4px;
+}
+
+/* Main layout (app pages) */
 
 .app-main {
     max-width: 960px;
@@ -95,7 +129,7 @@ body {
     padding: 0 16px;
 }
 
-/* Dashboard */
+/* Dashboard card */
 
 .dashboard {
     background-color: #ffffff;
@@ -243,7 +277,7 @@ body {
     }
 
     .app-nav {
-        display: none; /* можно скрыть навигацию на очень маленьких экранах */
+        display: none;
     }
 
     .dashboard {

@@ -1,7 +1,7 @@
 {% extends "base_auth.html" %}
 {% load static %}
 {% load form_tags %}
-{% block title %}Регистрация{% endblock %}
+{% block title %}Sign up{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/auth_register.css' %}">
@@ -16,7 +16,7 @@
 
     {% if form.errors %}
         <div class="auth-errors">
-            Проверьте правильность введённых данных.
+            Incorrect data.
         </div>
     {% endif %}
 
@@ -24,22 +24,22 @@
         {% csrf_token %}
 
         <div class="auth-field">
-            <label class="auth-label" for="id_username">Логин</label>
+            <label class="auth-label" for="id_username">Username</label>
             {{ form.username|add_class:"auth-input" }}
         </div>
 
         <div class="auth-field">
-            <label class="auth-label" for="id_email">Email (необязательно)</label>
+            <label class="auth-label" for="id_email">Email (optional)</label>
             {{ form.email|add_class:"auth-input" }}
         </div>
 
         <div class="auth-field">
-            <label class="auth-label" for="id_password1">Пароль</label>
+            <label class="auth-label" for="id_password1">Password</label>
             {{ form.password1|add_class:"auth-input" }}
         </div>
 
         <div class="auth-field">
-            <label class="auth-label" for="id_password2">Повторите пароль</label>
+            <label class="auth-label" for="id_password2">Repeat password</label>
             {{ form.password2|add_class:"auth-input" }}
         </div>
 
@@ -48,12 +48,12 @@
 
     <div class="auth-links">
         <p>
-            Уже есть аккаунт?
-            <a href="{% url 'login' %}">Войти</a>
+            Already have an account?
+            <a href="{% url 'login' %}">Login</a>
         </p>
         <p>
-            Забыли пароль?
-            <a href="{% url 'password_reset' %}">Восстановить доступ</a>
+            Forgot password?
+            <a href="{% url 'password_reset' %}">Reset password</a>
         </p>
     </div>
 </div>
