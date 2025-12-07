@@ -9,23 +9,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static "css/styles.css" %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
 <header class="app-header">
     <div class="app-header-left">
         <div class="app-logo">RR</div>
         <nav class="app-nav">
-            <a href="{% url "dashboard" %}" class="app-nav-link">Dashboard</a>
-            <a href="{% url "expense_list" %}" class="app-nav-link">Expenses</a>
-            <a href="{% url "ai_analysis" %}" class="app-nav-link">AI analysis</a>
+            <a href="{% url 'dashboard' %}" class="app-nav-link">Dashboard</a>
+            <a href="{% url 'expense_list' %}" class="app-nav-link">Expenses</a>
+            <a href="{% url 'ai_analysis' %}" class="app-nav-link">AI analysis</a>
         </nav>
     </div>
 
     <div class="app-header-right">
         {% if user.is_authenticated %}
             <span class="app-username">{{ user.username }}</span>
-            <a href="{% url "logout" %}" class="app-logout-link">Log out</a>
+            <a href="{% url 'custom_logout' %}" class="app-logout-link">Log out</a>
         {% endif %}
     </div>
 </header>
