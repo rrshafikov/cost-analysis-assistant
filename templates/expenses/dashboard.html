@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    {% if total == 0 %}
+        <section class="dashboard-empty">
+            <h1 class="dashboard-empty-title">Welcome, {{ user.username }}.</h1>
+            <p class="dashboard-empty-text">
+                You have not added any expenses yet. Start by creating your first entry.
+            </p>
+            <a href="{% url "expense_create" %}" class="primary-button">Add first expense</a>
+        </section>
+    {% else %}
+        <header class="dashboard-header">
+            <div>
+                <h1 class="dashboard-title">Dashboard</h1>
+                <p class="dashboard-subtitle">Overview of your recent spending</p>
+            </div>
+        </header>
+
+        <section class="dashboard-summary">
+            <p class="dashboard-total-label">Total spent (all time)</p>
+            <p class="dashboard-total-value">{{ total }}</p>
+        </section>
+
+        <section class="dashboard-categories">
+            <h2 class="dashboard-section-title">By category</h2>
+
+            <ul class="dashboard-category-list">
+                {% for row in by_category %}
+                    <li class="dashboard-category-item">
+                        <span class="dashboard-category-name">
+                            {{ row.category__name|default:"Uncategorized" }}
+                        </span>
+                        <span class="dashboard-category-amount">
+                            {{ row.total }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top: 16px;">
+                <a href="{% url "expense_list" %}" class="secondary-link">View all expenses</a>
+                <a href="{% url "expense_create" %}" class="primary-button primary-button-small">
+                    Add expense
+                </a>
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

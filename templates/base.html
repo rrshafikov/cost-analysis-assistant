@@ -1,42 +1,38 @@
 {% load static %}
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Cost Analysis Assistant{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    <!-- JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static "css/styles.css" %}">
 </head>
 <body>
-<header>
-    <nav class="navbar">
-        <div class="logo">
-            <a href="{% url 'dashboard' %}">Cost Analysis Assistant</a>
-        </div>
-        <ul class="nav-links">
-            {% if user.is_authenticated %}
-                <li><a href="{% url 'dashboard' %}">Дашборд</a></li>
-                <li><a href="{% url 'expense_list' %}">Расходы</a></li>
-                <li><a href="{% url 'ai_analysis' %}">AI-анализ</a></li>
-                <li><span class="username">{{ user.username }}</span></li>
-                <li><a href="{% url 'logout' %}">Выйти</a></li>
-            {% else %}
-                <li><a href="{% url 'login' %}">Войти</a></li>
-            {% endif %}
-        </ul>
-    </nav>
+<header class="app-header">
+    <div class="app-header-left">
+        <div class="app-logo">RR</div>
+        <nav class="app-nav">
+            <a href="{% url "dashboard" %}" class="app-nav-link">Dashboard</a>
+            <a href="{% url "expense_list" %}" class="app-nav-link">Expenses</a>
+            <a href="{% url "ai_analysis" %}" class="app-nav-link">AI analysis</a>
+        </nav>
+    </div>
+
+    <div class="app-header-right">
+        {% if user.is_authenticated %}
+            <span class="app-username">{{ user.username }}</span>
+            <a href="{% url "logout" %}" class="app-logout-link">Log out</a>
+        {% endif %}
+    </div>
 </header>
 
-<main class="container">
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <div class="message message-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
+<main class="app-main">
     {% block content %}{% endblock %}
 </main>
 
-<script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>
