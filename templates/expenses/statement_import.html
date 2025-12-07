@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Import statement{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Import statement</h1>
+            <p class="dashboard-subtitle">
+                Upload a CSV from T-Bank or a PDF statement from Sberbank.
+            </p>
+        </div>
+    </header>
+
+    <form method="post" enctype="multipart/form-data" class="auth-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="primary-button">Import</button>
+    </form>
+</div>
+{% endblock %}

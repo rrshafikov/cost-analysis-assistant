@@ -2,11 +2,12 @@
 from datetime import date, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import (
+    FormView,
     TemplateView,
     ListView,
     CreateView,
@@ -14,60 +15,89 @@ from django.views.generic import (
     DeleteView,
 )
 
-from .forms import ExpenseForm
+from .forms import ExpenseForm, ExpenseCategory
 from .models import Expense
+
+from django.utils import timezone
+
+from .forms import ExpenseForm, StatementImportForm
+from .services.importers import import_tbank_csv, import_sber_pdf
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "expenses/dashboard.html"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        ctx = super().get_context_data(**kwargs)
+        qs = filtered_expenses_queryset(self.request)
 
-        expenses = Expense.objects.filter(user=self.request.user)
+        # по умолчанию — последние 30 дней
+        if not self.request.GET.get("date_from") and not self.request.GET.get("date_to"):
+            today = timezone.now().date()
+            qs = qs.filter(date__gte=today - timezone.timedelta(days=30))
 
-        total = expenses.aggregate(total=Sum("amount"))["total"] or 0
-
-        by_category = (
-            expenses
-            .values("category__name")
-            .annotate(total=Sum("amount"))
-            .order_by("-total")
+        summary = qs.aggregate(
+            total=Sum("amount"),
+            count=Count("id"),
         )
 
-        context["total"] = total
-        context["by_category"] = by_category
-        return context
+        total = summary["total"] or 0
+        count = summary["count"] or 0
+
+        first = qs.order_by("date").first()
+        last = qs.order_by("-date").first()
+        if first and last:
+            days_span = (last.date - first.date).days + 1
+            avg_per_day = total / days_span if days_span > 0 else total
+        else:
+            avg_per_day = 0
+
+        # для фильтров
+        ctx["available_banks"] = (
+            Expense.objects.filter(user=self.request.user)
+            .exclude(bank="")
+            .values_list("bank", flat=True)
+            .distinct()
+        )
+        ctx["available_currencies"] = (
+            Expense.objects.filter(user=self.request.user)
+            .values_list("currency", flat=True)
+            .distinct()
+        )
+        ctx["categories"] = ExpenseCategory.objects.filter(user=self.request.user)
+
+        ctx["total"] = total
+        ctx["count"] = count
+        ctx["avg_per_day"] = avg_per_day
+        ctx["has_expenses"] = qs.exists()
+
+        return ctx
 
 
 class ExpenseListView(LoginRequiredMixin, ListView):
     model = Expense
     template_name = "expenses/expense_list.html"
     context_object_name = "expenses"
+    paginate_by = 20
 
     def get_queryset(self):
-        qs = Expense.objects.filter(user=self.request.user)
-
-        from_date = self.request.GET.get("from_date")
-        to_date = self.request.GET.get("to_date")
-
-        if from_date:
-            qs = qs.filter(date__gte=from_date)
-        if to_date:
-            qs = qs.filter(date__lte=to_date)
-
-        return qs
+        return filtered_expenses_queryset(self.request)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        expenses = context["expenses"]
-        total = expenses.aggregate(total=Sum("amount"))["total"] or 0
-
-        context["total"] = total
-        context["from_date"] = self.request.GET.get("from_date") or ""
-        context["to_date"] = self.request.GET.get("to_date") or ""
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx["available_banks"] = (
+            Expense.objects.filter(user=self.request.user)
+            .exclude(bank="")
+            .values_list("bank", flat=True)
+            .distinct()
+        )
+        ctx["available_currencies"] = (
+            Expense.objects.filter(user=self.request.user)
+            .values_list("currency", flat=True)
+            .distinct()
+        )
+        ctx["categories"] = ExpenseCategory.objects.filter(user=self.request.user)
+        return ctx
 
 
 class ExpenseCreateView(LoginRequiredMixin, CreateView):
@@ -172,3 +202,50 @@ class AIAnalysisView(LoginRequiredMixin, View):
         from django.shortcuts import render  # импорт локально, чтобы не засорять глобальный неймспейс
 
         return render(self.request, self.template_name, context)
+
+
+class StatementImportView(LoginRequiredMixin, FormView):
+    template_name = "expenses/statement_import.html"
+    form_class = StatementImportForm
+    success_url = reverse_lazy("expense_list")
+
+    def form_valid(self, form):
+        uploaded = form.cleaned_data["file"]
+        source = form.cleaned_data["source"]
+
+        if source == "tbank_csv":
+            created, total = import_tbank_csv(uploaded, self.request.user)
+        else:
+            created, total = import_sber_pdf(uploaded, self.request.user)
+
+        messages.success(
+            self.request,
+            f"Imported {created} expenses, total amount: {total}.",
+        )
+        return super().form_valid(form)
+
+
+def filtered_expenses_queryset(request):
+    qs = Expense.objects.filter(user=request.user).select_related("category")
+
+    bank = request.GET.get("bank")
+    if bank:
+        qs = qs.filter(bank=bank)
+
+    currency = request.GET.get("currency")
+    if currency:
+        qs = qs.filter(currency=currency)
+
+    category_id = request.GET.get("category")
+    if category_id:
+        qs = qs.filter(category_id=category_id)
+
+    date_from = request.GET.get("date_from")
+    if date_from:
+        qs = qs.filter(date__gte=date_from)
+
+    date_to = request.GET.get("date_to")
+    if date_to:
+        qs = qs.filter(date__lte=date_to)
+
+    return qs

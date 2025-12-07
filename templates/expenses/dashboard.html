@@ -3,49 +3,103 @@
 
 {% block content %}
 <div class="dashboard">
-    {% if total == 0 %}
-        <section class="dashboard-empty">
-            <h1 class="dashboard-empty-title">Welcome, {{ user.username }}.</h1>
-            <p class="dashboard-empty-text">
-                You have not added any expenses yet. Start by creating your first entry.
+    <header class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Dashboard</h1>
+            <p class="dashboard-subtitle">
+                Overview of your expenses for the selected period.
             </p>
-            <a href="{% url "expense_create" %}" class="primary-button">Add first expense</a>
+        </div>
+
+        <div>
+            <a href="{% url 'expense_create' %}" class="primary-button primary-button-small">
+                Add expense
+            </a>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <form method="get" class="auth-form" style="margin-bottom: 18px;">
+        <div class="auth-field">
+            <label class="auth-label" for="id_bank">Bank</label>
+            <select name="bank" id="id_bank" class="auth-input">
+                <option value="">All banks</option>
+                {% for bank in available_banks %}
+                    <option value="{{ bank }}" {% if request.GET.bank == bank %}selected{% endif %}>
+                        {{ bank }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label" for="id_currency">Currency</label>
+            <select name="currency" id="id_currency" class="auth-input">
+                <option value="">All currencies</option>
+                {% for cur in available_currencies %}
+                    <option value="{{ cur }}" {% if request.GET.currency == cur %}selected{% endif %}>
+                        {{ cur }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label" for="id_category">Category</label>
+            <select name="category" id="id_category" class="auth-input">
+                <option value="">All categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:'s' %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="auth-field">
+            <label class="auth-label">Date range</label>
+            <div style="display:flex; gap:8px;">
+                <input type="date"
+                       name="date_from"
+                       value="{{ request.GET.date_from }}"
+                       class="auth-input"
+                       style="flex:1;">
+                <input type="date"
+                       name="date_to"
+                       value="{{ request.GET.date_to }}"
+                       class="auth-input"
+                       style="flex:1;">
+            </div>
+        </div>
+
+        <button type="submit" class="primary-button primary-button-small">
+            Apply filters
+        </button>
+        <a href="{% url 'dashboard' %}" class="secondary-link">Reset</a>
+        <a href="{% url 'statement_import' %}" class="secondary-link">Import statement</a>
+        <a href="{% url 'expense_list' %}" class="secondary-link">Open history</a>
+    </form>
+
+    {% if has_expenses %}
+        <section class="dashboard-summary">
+            <p class="dashboard-total-label">Total spent</p>
+            <p class="dashboard-total-value">{{ total }} {{ request.GET.currency|default:"" }}</p>
+            <p class="dashboard-total-label">
+                {{ count }} expenses · avg per day: {{ avg_per_day|floatformat:2 }}
+            </p>
         </section>
     {% else %}
-        <header class="dashboard-header">
-            <div>
-                <h1 class="dashboard-title">Dashboard</h1>
-                <p class="dashboard-subtitle">Overview of your recent spending</p>
-            </div>
-        </header>
-
-        <section class="dashboard-summary">
-            <p class="dashboard-total-label">Total spent (all time)</p>
-            <p class="dashboard-total-value">{{ total }}</p>
-        </section>
-
-        <section class="dashboard-categories">
-            <h2 class="dashboard-section-title">By category</h2>
-
-            <ul class="dashboard-category-list">
-                {% for row in by_category %}
-                    <li class="dashboard-category-item">
-                        <span class="dashboard-category-name">
-                            {{ row.category__name|default:"Uncategorized" }}
-                        </span>
-                        <span class="dashboard-category-amount">
-                            {{ row.total }}
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
-
-            <div style="margin-top: 16px;">
-                <a href="{% url "expense_list" %}" class="secondary-link">View all expenses</a>
-                <a href="{% url "expense_create" %}" class="primary-button primary-button-small">
-                    Add expense
-                </a>
-            </div>
+        <section class="dashboard-empty">
+            <h2 class="dashboard-empty-title">No expenses yet.</h2>
+            <p class="dashboard-empty-text">
+                Import a statement from your bank or add the first expense manually.
+            </p>
+            <a href="{% url 'statement_import' %}" class="primary-button" style="margin-bottom:8px;">
+                Import statement
+            </a>
+            <a href="{% url 'expense_create' %}" class="secondary-link">
+                Add manually
+            </a>
         </section>
     {% endif %}
 </div>
